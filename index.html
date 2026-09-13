@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Flippy Flapper</title>
+  <link rel="stylesheet" href="lib/flippy-flapper.css">
+  <link rel="stylesheet" href="app.css">
+  <script defer src="lib/flippy-flapper.js"></script>
+  <script defer src="demo/manifest.js"></script>
+  <script defer src="demo/mixed.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="app-header">
+    <strong>Flippy Flapper</strong>
+    <div class="app-actions">
+      <label class="app-view-label">View <select id="page-view"><option value="auto">Auto</option><option value="always" selected>Facing pages</option><option value="never">Single page</option></select></label>
+      <button id="open-images" type="button">Open page images</button>
+      <button id="edit-layouts" type="button" disabled>Page layouts</button>
+      <label class="app-view-label">Demo <select id="open-demo"><option value="classic">Field Notes</option><option value="mixed">Mixed pages</option></select></label>
+      <input id="page-files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple hidden>
+    </div>
+  </header>
+  <div class="app-info"><span id="app-status" role="status">Opening the demo…</span><span>Images stay in your browser.</span></div>
+  <main id="magazine"></main>
+  <dialog id="layouts-dialog" aria-labelledby="layouts-title">
+    <div class="layouts-heading"><h2 id="layouts-title">Page layouts</h2><button id="close-layouts" type="button" aria-label="Close page layouts">×</button></div>
+    <p>Fit images on white paper, join a two-page spread, or add a panel that folds outward.</p>
+    <label class="paper-reference">Paper size from <select id="paper-reference"></select></label>
+    <p class="layouts-note">Auto uses the first and last images as covers when they are not wide and treats images at least 1.6× the paper width-to-height ratio as spreads. Set a wide image to Fold-out to keep a normal page beside it. Spreads may add a blank page to stay together.</p>
+    <div id="layout-rows"></div>
+    <div class="layouts-footer"><button id="cancel-layouts" type="button">Cancel</button><button id="apply-layouts" type="button">Apply layouts</button></div>
+  </dialog>
+</body>
+</html>

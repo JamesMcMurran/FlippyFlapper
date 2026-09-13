@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mixed pages · Flippy Flapper</title>
+<link rel="stylesheet" href="../lib/flippy-flapper.css">
+<style>body{margin:0;background:#181b1e;color:#eff0ed;font:16px system-ui}header{padding:16px 24px}h1{font-size:20px;margin:0 0 6px}p{margin:0;color:#b8c4c6}#reader{height:calc(100dvh - 100px);min-height:350px}</style>
+<header><h1>Single pages, spreads, and fold-outs</h1><p>Pages 2–3: right fold-out. Pages 4–5: left fold-out and square image. Pages 6–7: one two-page image.</p></header><main id="reader"></main>
+<script src="../lib/flippy-flapper.js"></script><script src="../demo/mixed.js"></script>
+<script>
+const viewer=FlippyFlapper.create(document.getElementById('reader'),{
+ manifest:window.FLIPPY_MIXED,
+ baseUrl:new URL('../demo/',document.baseURI).href,
+ initialPage:2,
+ spreadMode:'always'
+});
+// await viewer.openFoldout(3); opens the right panel, and fits all three visible panels.
+// await viewer.closeFoldout(); closes any open wings before ordinary page turning.
+</script></html>
