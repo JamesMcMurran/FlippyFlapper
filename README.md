@@ -215,3 +215,12 @@ Bundled demo photography is separately provided under the [Unsplash License](htt
 - [Leaf by Jens Riesenberg](https://unsplash.com/photos/a-close-up-of-a-large-green-leaf-KsWn2nIB2HE)
 
 Demo page layouts and text were created for this project. A software license does not replace the original terms for third-party photography.
+
+### Cover spreads
+
+Use `layout: 'cover-spread'` on the first source image when it contains the back
+cover on the left and front cover on the right. The right half becomes reading
+page 1; the left half becomes the final back cover, with an alignment blank
+only when needed. Interior `spread` sources remain left-half then right-half
+and can be read individually in single-page mode. A cover spread is allowed
+only at the beginning of the manifest.
