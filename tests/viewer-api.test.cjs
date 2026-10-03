@@ -133,3 +133,41 @@ for (const file of ['flippy-flapper.js', 'flippy-flapper.esm.js']) {
         assert.deepEqual(viewer.jumps, []);
     });
 }
+
+for (const file of ['flippy-flapper.js', 'flippy-flapper.esm.js']) {
+    test(`${file}: toolbar reflects reading mode, animation and fullscreen state`, () => {
+        const prototype = prototypeFor(file);
+        const nodes = new Map();
+        const node = selector => {
+            if (!nodes.has(selector)) nodes.set(selector, {
+                attributes: {}, classList: { toggle() {} },
+                setAttribute(name, value) { this.attributes[name] = value; },
+            });
+            return nodes.get(selector);
+        };
+        const viewer = Object.create(prototype);
+        viewer.state = { mode: 'single', fullscreen: false };
+        viewer.options = { animatePageTurns: true };
+        viewer.root = { querySelectorAll: () => [], classList: { toggle() {} } };
+        viewer.$ = node;
+        viewer.updateControls();
+        assert.equal(node('[data-action=readingMode]').attributes['aria-label'], 'Show two pages');
+        assert.equal(node('[data-action=animation]').attributes['aria-pressed'], 'true');
+        assert.equal(node('[data-action=animation]').attributes['aria-label'], 'Disable page-turn animation');
+        let canceled = 0;
+        viewer.cancelTurn = () => { canceled++; };
+        viewer.setPageTurnAnimation(false);
+        assert.equal(canceled, 1);
+        assert.equal(node('[data-action=animation]').attributes['aria-label'], 'Enable page-turn animation');
+        assert.equal(node('[data-action=animation]').attributes['aria-pressed'], 'false');
+        viewer.state.mode = 'spread';
+        viewer.state.fullscreen = true;
+        viewer.updateControls();
+        assert.equal(node('[data-action=readingMode]').attributes['aria-label'], 'Show single page');
+        assert.equal(node('[data-action=readingMode]').attributes['aria-pressed'], 'true');
+        assert.equal(node('.ff-hint').textContent, 'To exit fullscreen, click the [ ] box in the bottom right of this page.');
+        viewer.state.fullscreen = false;
+        viewer.updateControls();
+        assert.equal(node('.ff-hint').textContent, 'DRAG A CORNER. TURN THE PAGE.');
+    });
+}

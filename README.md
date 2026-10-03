@@ -236,3 +236,5 @@ front cover on the right and back cover on the left. Interior spreads remain
 left-to-right, including ordinary two-page centerfolds. The bundled app uses
 the same helper and allows manual overrides. Ratio alone cannot identify every
 landscape single page or folding design.
+
+The default reader toolbar includes reading mode and page-turn animation toggles. Reading mode switches between one page and facing pages without losing the current reading position. The animation button updates its icon and accessible label when toggled. During fullscreen, a hint above the pages directs readers to the fullscreen box at the bottom right of the toolbar.
