@@ -18,7 +18,7 @@ Read your own page images in the standalone app, or embed a magazine in an exist
 ## Try the app
 
 1. Download or clone the repository.
-2. Open `html5-app/index.html` in a desktop browser, keeping the folder and its assets together.
+2. Open `index.html` in a desktop browser, keeping the folder and its assets together.
 3. Choose **Open page images** and select your JPEG, PNG, WebP, or browser-supported AVIF files.
 4. Use **Page layouts** to adjust the paper proportions and assign spreads, fold-outs, or covers.
 
@@ -26,11 +26,11 @@ The bundled app and demos can run offline. No build step is needed. The app init
 
 Files are sorted naturally by filename, such as `001.webp`, `002.webp`, and `003.webp`. Selected images are used without recompression; the app generates separate thumbnails. Imported images and layout choices last for the current session, so select them again after reloading.
 
-See the [app guide](html5-app/README.md) for more detail.
+The app files and bundled examples are included directly in this checkout.
 
 ## Embed in an HTML5 page
 
-Copy these files from `html5-app/lib/` into your website:
+Copy these files from `lib/` into your website:
 
 - `flippy-flapper.js`
 - `flippy-flapper.css`
@@ -77,7 +77,7 @@ Add your page images and thumbnails, then create a reader:
 </html>
 ```
 
-For a ready-to-run example, open [examples/embed.html](html5-app/examples/embed.html). The [mixed-page example](html5-app/examples/mixed.html) demonstrates spreads and fold-outs.
+For a ready-to-run example, open [examples/embed.html](examples/embed.html). The [mixed-page example](examples/mixed.html) demonstrates spreads and fold-outs.
 
 For an ES module integration, load the same stylesheet and import:
 
@@ -102,7 +102,7 @@ The app can automatically classify wide images as spreads. Library manifests use
 
 Reading-page numbers can differ from source indexes. A spread occupies two reading pages, while a fold-out occupies one plus its wing. Alignment blanks are inserted when necessary to keep a spread together or an explicit back cover alone.
 
-`initialPage` and `goToPage()` use reading-page numbers. Use `initialSourceIndex` to open a particular source image. `getState()` reports both `pageIndex` and `sourceIndex`, plus `foldoutsOpen`. Alignment blanks have a null source index.
+`initialPage` and `goToPage()` use reading-page numbers. Use `initialSourceIndex` to open a particular source image. `getState()` reports `pageIndex`, `sourceIndex`, `pageCount` (including alignment blanks), `sourcePageCount`, `visiblePages` (reading-page/source pairs), and `foldoutsOpen`. Each half of a spread maps to the same source index. Counts are zero and visible pages are empty before a manifest loads. Alignment blanks have a null source index.
 
 Fold-outs open toward their outside edge. The folded view shows the inner half of the image; opening reveals the other half and fits the expanded book to the available width. Navigation closes open fold-outs before turning. A drag on an open fold-out closes it; the next drag turns the page.
 
@@ -135,12 +135,13 @@ Common library options:
 | `showToolbar` | `true` | Show reader controls |
 | `showThumbnails` | `false` | Open the thumbnail tray initially |
 | `globalArrowKeys` | `false` | Enable page arrows outside the reader |
+| `animatePageTurns` | `true` | Set `false` for immediate button/keyboard navigation without curl animations; drag turns are disabled while zoom/pan remain available |
 | `navigationTurnDurationMs` | `1000` | Button, keyboard, and automatic turn duration |
 | `pageTurnDurationMs` | `450` | Base duration for settling a released drag |
 | `autoFlipIntervalMs` | `5000` | Pause between automatic turns |
 | `maxZoom` | `3` | Maximum zoom relative to fitted size |
 
-Manual turns follow the pointer. Reduced-motion preferences use a brief transition. See the [TypeScript declarations](html5-app/lib/flippy-flapper.d.ts) for all options and public methods.
+Manual turns follow the pointer. Reduced-motion preferences use a brief transition. Set `animatePageTurns: false` for navigation without a transition, or call `viewer.setPageTurnAnimation(false)` at runtime. See the [TypeScript declarations](lib/flippy-flapper.d.ts) for all options and public methods.
 
 ## JavaScript API
 
@@ -178,42 +179,35 @@ The reader attempts WebGL rendering, using a deforming mesh and original image t
 
 WebP reduces asset size, but image dimensions still affect decoding, memory, and rendering cost. Full-resolution rendering does not guarantee a particular frame rate on every device.
 
-Browser checks currently cover Chrome with the Canvas fallback. WebGL execution, Safari, Firefox, physical touch devices, and direct `file://` launch still need broader verification. See the [verification notes](docs/verification.md) for tested behavior and limits.
+Browser checks currently cover Chrome with the Canvas fallback. WebGL execution, Safari, Firefox, physical touch devices, and direct `file://` launch still need broader verification.
 
 The app reads exported page images. PDF conversion, OCR/search, magazine editing, persistent import storage, and a publishing backend are not included.
 
 ## Development
 
-Use Node.js 20 or later. No dependency installation is needed for the included build and test scripts.
+The distributable library files live in `lib/`. This checkout contains no separate
+library source tree or build step. Keep the classic and ES module builds aligned
+when changing behavior and update `lib/flippy-flapper.d.ts` for public API changes.
+
+Run the dependency-free API regression tests with Node.js 20 or later:
 
 ```sh
-npm run build:library
 npm test
-npm run dev
 ```
 
-Open `http://localhost:4173/html5/` for the current app. The server root serves an earlier prototype.
-
-| Path | Contents |
-| --- | --- |
-| `library-src/` | Source for the library, styles, and types |
-| `html5-app/` | Standalone app, generated library builds, demos, and examples |
-| `scripts/` | Build and development tools |
-| `tests/` | Automated tests and browser harnesses |
-| `docs/` | Project specification and verification notes |
-| `dist/` | Earlier hosted prototype |
-
-Edit `library-src/`, then run `npm run build:library` to update the distributed library files. `npm run check` currently checks the earlier `dist/` prototype.
+For browser checks, serve this checkout with a local HTTP server and open
+`index.html` or `examples/embed.html`. Test desktop and narrow-screen layouts;
+physical touch devices and Safari/Firefox still require separate verification.
 
 ## Contributing
 
 Bug reports should include the browser and operating system, steps to reproduce, page layout, and whether the issue occurs in the bundled demo. Include a small sample using images you have permission to share when the issue depends on particular artwork.
 
-Keep changes focused. For library changes, rebuild the distributed files, run `npm test`, and update the relevant documentation. For rendering or input changes, verify the affected interaction in the app and record any browser-specific limitations.
+Keep changes focused. For library changes, update both distributed JavaScript files, run `npm test`, and update the relevant documentation. For rendering or input changes, verify the affected interaction in the app and record any browser-specific limitations.
 
 ## License
 
-The software license is pending. MIT has been proposed, but this repository does not yet contain a software `LICENSE` file.
+The software is provided under the [MIT License](LICENSE).
 
 Bundled demo photography is separately provided under the [Unsplash License](https://unsplash.com/license):
 
