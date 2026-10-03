@@ -224,3 +224,15 @@ page 1; the left half becomes the final back cover, with an alignment blank
 only when needed. Interior `spread` sources remain left-half then right-half
 and can be read individually in single-page mode. A cover spread is allowed
 only at the beginning of the manifest.
+
+### Automatic layouts
+
+Set `layout: 'auto'` and supply each source image's positive `width` and `height`.
+The exported `inferPageLayout(width, height)` helper uses aspect-ratio heuristics:
+portrait/square images are single pages, widths up to twice the height are
+spreads, and wider images are hinged fold-outs. Explicit layout choices override
+the suggestion. The first spread automatically becomes a cover spread, with
+front cover on the right and back cover on the left. Interior spreads remain
+left-to-right, including ordinary two-page centerfolds. The bundled app uses
+the same helper and allows manual overrides. Ratio alone cannot identify every
+landscape single page or folding design.

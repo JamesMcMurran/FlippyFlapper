@@ -14,17 +14,15 @@
   /** Infer a source's layout, allowing explicit choices to override its proportions. */
   function layoutFor(source,index,ref=paperReference){
     if(source.choice!=='auto')return source.choice;
-    const paper=sources[ref],ratio=source.width/source.height/(paper.width/paper.height);
-    if(ratio>=1.6)return 'spread';
-    return index===0||index===sources.length-1?'cover':'single';
+    return FlippyFlapper.inferPageLayout(source.width,source.height);
   }
   /** Install the current source images without revoking their URLs during a layout change. */
   async function mount(initialSourceIndex){
     if(reader)reader.destroy();
-    const paper=sources[paperReference];
+    const paper=sources[paperReference],layout=layoutFor(paper,paperReference),paperWidth=paper.width/(layout==='spread'||layout==='foldout'?2:1);
     reader=FlippyFlapper.create(root,{
-      manifest:{title,pageWidth:paper.width,pageHeight:paper.height,pageCount:sources.length,pages:sources.map((s,i)=>({index:i+1,image:s.image,thumbnail:s.thumbnail,layout:layoutFor(s,i)}))},
-      baseUrl,showHeader:true,globalArrowKeys:true,initialPage:sources.length>2?2:1,initialSourceIndex,
+      manifest:{title,pageWidth:paperWidth,pageHeight:paper.height,pageCount:sources.length,pages:sources.map((s,i)=>({index:i+1,image:s.image,thumbnail:s.thumbnail,layout:layoutFor(s,i),width:s.width,height:s.height}))},
+      baseUrl,showHeader:true,globalArrowKeys:true,initialPage:1,initialSourceIndex,
       spreadMode:document.getElementById('page-view').value
     });
     await reader.ready;layoutButton.disabled=false;

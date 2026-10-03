@@ -8,7 +8,7 @@ const vm = require('node:vm');
 function prototypeFor(file) {
     let source = fs.readFileSync(path.join(__dirname, '..', 'lib', file), 'utf8');
     if (file.endsWith('.esm.js')) source = source.replace(
-        'export {createMagazineViewer,createMagazineViewer as create,MagazineViewer};',
+        'export {createMagazineViewer,createMagazineViewer as create,MagazineViewer,inferPageLayout};',
         'window.FlippyFlapper = { MagazineViewer };'
     );
     const window = {};
