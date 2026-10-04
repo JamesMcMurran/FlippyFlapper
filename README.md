@@ -28,6 +28,78 @@ Files are sorted naturally by filename, such as `001.webp`, `002.webp`, and `003
 
 The app files and bundled examples are included directly in this checkout.
 
+## Imposition and intact source sheets
+
+Open **Page layouts** to select imposition and preview reading order. Files are
+naturally sorted by filename on import. The reader maps panels from the original
+images; it does not create cut image files, recompress originals, or upload them.
+Custom order assigns reading positions and 0°, 90°, 180°, or 270° rotations.
+
+| Mode | Input convention | Settings |
+| --- | --- | --- |
+| Single pages | One file per reading page | None |
+| Reader spreads | Single covers and facing-page files, left panel then right | Image dimensions/layout |
+| Booklet / saddle stitch | Outside front, outside back, then successive inward sheet sides | Include every side, including blanks |
+| Signature booklet | Booklet sides grouped by signature, in assembly order | Pages per signature, multiple of four; a shorter final signature is supported |
+| Consecutive / N-up | Row-major panels on each file | Rows and columns |
+| Cut and stack | First panel across all files, then the next panel/pile | Rows and columns |
+| Brochure | Outside then inside for each folded piece | Tri-fold, Z-fold, or gatefold preset |
+| Custom order | Assigned source-image indexes and row-major panel cells | Grid, reading positions, rotations |
+
+An eight-image saddle-stitch booklet contains 16 reading pages. Sheet-side panel
+pairs are `[16,1], [2,15], [14,3], [4,13], [12,5], [6,11], [10,7], [8,9]`.
+The reader opens the right panel of the first image as page 1 and finishes with
+its left panel as page 16.
+
+Brochure presets use these flat-sheet panel numbers: tri-fold `[5,6,1] / [2,3,4]`,
+Z-fold `[6,1,2] / [3,4,5]`, and gatefold `[8,1,2,7] / [3,4,5,6]`. Folding and duplex
+printing conventions vary. Compare the preview with your files and use Custom
+order for a different arrangement or flipped back side. Cut-and-stack treats each
+file as one sheet side; it does not automatically mirror duplex backs.
+
+Booklet, signature, and brochure modes require an even number of sheet-side
+images. Grids support 1–16 rows and columns; explicit imposition supports up to
+10,000 reading pages. Custom order may select a subset of panels, but may not
+assign a panel twice. The preview shows the first 120 reading pages.
+
+For library hosts, pass `imposition` on the manifest or call
+`FlippyFlapper.applyImposition(manifest, {type: 'booklet'})`. It returns a new
+reading sequence with `sourceIndex`, normalized `region`, and `rotation` fields,
+plus `readingPages: true`; input images and arrays are preserved. Available type
+values are `auto`, `single`, `reader-spreads`, `booklet`, `signature`, `n-up`,
+`cut-stack`, `brochure`, and `custom`. The default `auto` preserves legacy layouts.
+
+```js
+const manifest = {
+  title: 'Opening Night', pageWidth: 1000, pageHeight: 1545,
+  pages: sheetImages.map((image, i) => ({
+    index: i + 1, image, thumbnail: image, width: 2000, height: 1545
+  })),
+  imposition: { type: 'booklet' }
+};
+const reader = FlippyFlapper.create(container, {
+  manifest, preloadDistance: 2, maxCachedPages: 12, maxCachedImages: 8
+});
+```
+
+`createImpositionEditor(container, {sources, configuration, onChange, baseUrl})`
+provides the same controls and preview for embedded hosts. Its returned object
+supplies `getConfiguration()`, `valid`, `updateSources()`, `setConfiguration()`, and
+`destroy()`. Validate the configuration before persisting it on a server.
+
+## Image retention and preloading
+
+Decoded originals and fitted page surfaces remain in a bounded least-recently-used
+cache after page turns. Adjacent pages preload in both directions; facing mode
+loads complete neighboring spreads. Defaults retain 12 fitted page surfaces and
+8 decoded originals, with a two-page preload distance. Hosts can lower these
+counts for unusually large images. Retention is independent of preloading, so a
+recent backward turn normally reuses existing decoded artwork. Panels from one
+sheet share its original image load. Cached thumbnail previews are bounded to
+120 originals. Retry replaces a failed image load; destroying a viewer cancels
+pending loads and clears its caches. Caches last for that viewer session, not
+across browser reloads.
+
 ## Embed in an HTML5 page
 
 Copy these files from `lib/` into your website:
@@ -238,3 +310,10 @@ the same helper and allows manual overrides. Ratio alone cannot identify every
 landscape single page or folding design.
 
 The default reader toolbar includes reading mode and page-turn animation toggles. Reading mode switches between one page and facing pages without losing the current reading position. The animation button updates its icon and accessible label when toggled. During fullscreen, a hint above the pages directs readers to the fullscreen box at the bottom right of the toolbar.
+
+## Development checks
+
+`npm test` runs both library builds' unit tests. To run the standalone browser
+test, install development dependencies, install Chromium with
+`npx playwright install chromium`, and run `npm run test:browser`. These tools
+are development dependencies; the deployed app still has no runtime dependencies.

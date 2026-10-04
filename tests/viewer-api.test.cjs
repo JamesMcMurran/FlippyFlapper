@@ -8,7 +8,7 @@ const vm = require('node:vm');
 function prototypeFor(file) {
     let source = fs.readFileSync(path.join(__dirname, '..', 'lib', file), 'utf8');
     if (file.endsWith('.esm.js')) source = source.replace(
-        'export {createMagazineViewer,createMagazineViewer as create,MagazineViewer,inferPageLayout};',
+        'export {createMagazineViewer,createMagazineViewer as create,MagazineViewer,inferPageLayout,applyImposition,createImpositionEditor};',
         'window.FlippyFlapper = { MagazineViewer };'
     );
     const window = {};
@@ -169,5 +169,28 @@ for (const file of ['flippy-flapper.js', 'flippy-flapper.esm.js']) {
         viewer.state.fullscreen = false;
         viewer.updateControls();
         assert.equal(node('.ff-hint').textContent, 'DRAG A CORNER. TURN THE PAGE.');
+    });
+}
+
+for (const file of ['flippy-flapper.js', 'flippy-flapper.esm.js']) {
+    test(`${file}: unchanged resize notifications preserve active page turns while real changes still cancel`, () => {
+        const prototype = prototypeFor(file);
+        const viewer = Object.create(prototype);
+        viewer.manifest = { pageWidth: 100, pageHeight: 150 };
+        viewer.options = { spreadMode: 'always' };
+        viewer.state = { mode: 'spread' };
+        viewer.viewport = { getBoundingClientRect: () => ({ width: 800, height: 600 }) };
+        viewer.viewportSize = { width: 800, height: 600 };
+        viewer.pageWidth = 352;
+        viewer.pageHeight = 528;
+        viewer.turn = { active: true };
+        viewer.cancelFoldoutTransition = () => { throw Error('Real resize started'); };
+        viewer.resize();
+        assert.equal(viewer.turn.active, true);
+        viewer.options.spreadMode = 'never';
+        assert.throws(() => viewer.resize(), /Real resize started/);
+        viewer.options.spreadMode = 'always';
+        viewer.viewport.getBoundingClientRect = () => ({ width: 900, height: 600 });
+        assert.throws(() => viewer.resize(), /Real resize started/);
     });
 }
