@@ -12,7 +12,7 @@ function prototypeFor(file, globals = {}) {
         'window.FlippyFlapper = { MagazineViewer };'
     );
     const window = {};
-    vm.runInNewContext(source, { window, console: { error() {} }, ...globals }, { filename: file });
+    vm.runInNewContext(source, { window, console: { error() {} }, ...globals }, { filename: path.join(__dirname, '..', 'lib', file) });
     return window.FlippyFlapper.MagazineViewer.prototype;
 }
 

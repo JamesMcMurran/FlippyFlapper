@@ -2,7 +2,7 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 for(const file of ['flippy-flapper.js','flippy-flapper.esm.js']){
  let source=fs.readFileSync(path.join(__dirname,'..','lib',file),'utf8');
  source=source.replace('window.FlippyFlapper=Object.freeze({create:createMagazineViewer,createMagazineViewer,MagazineViewer,inferPageLayout,applyImposition,createImpositionEditor});','window.api={validateManifest,expandPages,inferPageLayout};').replace('export {createMagazineViewer,createMagazineViewer as create,MagazineViewer,inferPageLayout,applyImposition,createImpositionEditor};','window.api={validateManifest,expandPages,inferPageLayout};');
- const window={};vm.runInNewContext(source,{window,URL});
+ const window={};vm.runInNewContext(source,{window,URL},{filename:path.join(__dirname,'..','lib',file)});
  test(`${file}: cover spread reads front first and back last, with interior halves in order`,()=>{
   for(const layouts of [['cover-spread'],['cover-spread','single'],['cover-spread','spread']]){
    const manifest=window.api.validateManifest({pageWidth:100,pageHeight:200,pages:layouts.map(layout=>({layout,image:'x.webp',thumbnail:'x.webp'}))},'https://test/');
