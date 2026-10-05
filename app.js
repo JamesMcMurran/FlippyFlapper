@@ -20,7 +20,7 @@
   async function mount(initialSourceIndex){
     if(reader)reader.destroy();
     const paper=sources[paperReference],layout=layoutFor(paper,paperReference),paperWidth=paper.width/(layout==='spread'||layout==='foldout'?2:1);
-    const mapped=imposition.type==='auto'?null:FlippyFlapper.applyImposition({pageWidth:paperWidth,pageHeight:paper.height,pages:sources},imposition);
+    const mapped=imposition.type==='auto'?null:FlippyFlapper.applyImposition({pageWidth:paperWidth,pageHeight:paper.height,pages:sources.map((source,index)=>({...source,layout:layoutFor(source,index)}))},imposition);
     const panel=mapped?.pages.find(p=>p.sourceIndex===paperReference+1)||mapped?.pages[0],r=panel?.region;
     const pw=r?paper.width*r.width:paperWidth,ph=r?paper.height*r.height:paper.height,sideways=panel?.rotation%180===90;
     reader=FlippyFlapper.create(root,{
@@ -76,7 +76,7 @@
   /** Present source-image layout choices separately from physical page numbers. */
   function editLayouts(){
     if(!sources.length||importing)return;reader.stopAutoFlip();reader.cancelTurn();reference.replaceChildren();rows.replaceChildren();
-    impositionEditor?.destroy();impositionEditor=FlippyFlapper.createImpositionEditor(document.getElementById('imposition-settings'),{sources,configuration:imposition,baseUrl,onChange:(_,state)=>{document.getElementById('apply-layouts').disabled=!state.valid;}});
+    impositionEditor?.destroy();impositionEditor=FlippyFlapper.createImpositionEditor(document.getElementById('imposition-settings'),{sources:sources.map(source=>({...source,layout:source.choice||source.layout||'auto'})),configuration:imposition,baseUrl,onChange:(_,state)=>{document.getElementById('apply-layouts').disabled=!state.valid;}});
     document.getElementById('apply-layouts').disabled=!impositionEditor.valid;
     sources.forEach((source,index)=>{
       const option=document.createElement('option');option.value=index;option.textContent=`${source.name} (${source.width} × ${source.height})`;reference.append(option);
@@ -91,6 +91,12 @@
       select.value=source.choice;row.append(preview,label,select);rows.append(row);
     });reference.value=paperReference;dialog.showModal();
   }
+  /** Refresh the preview from draft choices without applying them to the reader. */
+  rows.addEventListener('change',()=>{
+    const choices=[...rows.querySelectorAll('select')].map(select=>select.value);
+    impositionEditor.updateSources(sources.map((source,index)=>({...source,layout:choices[index]})));
+    document.getElementById('apply-layouts').disabled=!impositionEditor.valid;
+  });
   /** Apply choices and retain the same source image even if physical numbering changes. */
   async function applyLayouts(){
     const sourceIndex=reader.getState().sourceIndex||1;
