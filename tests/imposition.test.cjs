@@ -1,5 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-function api(file,extras={}){let s=fs.readFileSync(path.join(__dirname,'../lib',file),'utf8');s=s.replace(/window.FlippyFlapper=Object.freeze\([^\n]+\);/,'window.api={applyImposition,expandPages,validateManifest,ImageCache,pageSurface};').replace(/export \{[^\n]+\};/,'window.api={applyImposition,expandPages,validateManifest,ImageCache,pageSurface};');const window={};vm.runInNewContext(s,{window,URL,...extras});return window.api;}
+function api(file,extras={}){let s=fs.readFileSync(path.join(__dirname,'../lib',file),'utf8');s=s.replace(/window.FlippyFlapper=Object.freeze\([^\n]+\);/,'window.api={applyImposition,expandPages,validateManifest,validateOptions,ImageCache,pageSurface};').replace(/export \{[^\n]+\};/,'window.api={applyImposition,expandPages,validateManifest,validateOptions,ImageCache,pageSurface};');const window={};vm.runInNewContext(s,{window,URL,...extras});return window.api;}
 const plain=value=>JSON.parse(JSON.stringify(value));
 const source=(count)=>({pageWidth:100,pageHeight:150,pages:Array.from({length:count},(_,i)=>({index:i+1,image:`sheet-${i+1}.webp`,thumbnail:`sheet-${i+1}-thumb.webp`,width:200,height:150,layout:'spread'}))});
 for(const file of ['flippy-flapper.js','flippy-flapper.esm.js']){
@@ -49,4 +49,19 @@ for(const file of ['flippy-flapper.js','flippy-flapper.esm.js'])test(`${file}: p
  const image={width:200,height:150},panel={region:{x:.5,y:0,width:.5,height:1},sheetWidth:1,crop:0};
  const canvas=lib.pageSurface(image,panel,2/3);assert.equal(canvas.width,100);assert.equal(canvas.height,150);assert.deepEqual(calls.at(-1),['draw',image,100,0,100,150,-50,-75,100,150]);assert.deepEqual(calls.find(c=>c[0]==='rotate'),['rotate',0]);
  const rotated=lib.pageSurface(image,{...panel,rotation:90},1.5);assert.equal(rotated.width,150);assert.equal(rotated.height,100);
+});
+
+for(const file of ['flippy-flapper.js','flippy-flapper.esm.js'])test(`${file}: manifest mappings, rotations and aspect ratios are bounded`,()=>{
+ const lib=api(file),base={pageWidth:100,pageHeight:150,pages:[{image:'x.webp',thumbnail:'x.webp'}]};
+ assert.throws(()=>lib.validateManifest({...base,pageWidth:1e300},'https://test/'),/aspect ratio/);
+ assert.throws(()=>lib.validateManifest({...base,pages:[{...base.pages[0],rotation:45}]},'https://test/'),/rotation/);
+ assert.throws(()=>lib.validateManifest({...base,readingPages:true,sourcePageCount:2,pages:[{...base.pages[0],sourceIndex:3}]},'https://test/'),/sourceIndex/);
+ assert.throws(()=>lib.validateManifest({...base,readingPages:true,sourcePageCount:1.5},'https://test/'),/sourcePageCount/);
+ assert.equal(lib.validateManifest({...base,pageWidth:3200,pageHeight:100},'https://test/').pageWidth,3200);
+});
+
+for(const file of ['flippy-flapper.js','flippy-flapper.esm.js'])test(`${file}: numeric viewer options reject invalid values before initialization`,()=>{
+ const validate=api(file).validateOptions;
+ for(const options of [{maxZoom:NaN},{maxZoom:Infinity},{navigationTurnDurationMs:-1},{pageTurnThreshold:1.1},{preloadDistance:9},{maxCachedPages:1.5}])assert.throws(()=>validate(options),/must be a finite number/);
+ assert.equal(validate({maxZoom:4,pageTurnThreshold:.5}).maxZoom,4);
 });

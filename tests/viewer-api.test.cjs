@@ -5,14 +5,14 @@ const path = require('node:path');
 const vm = require('node:vm');
 
 /** Load each distributable without requiring a DOM or a runtime dependency. */
-function prototypeFor(file) {
+function prototypeFor(file, globals = {}) {
     let source = fs.readFileSync(path.join(__dirname, '..', 'lib', file), 'utf8');
     if (file.endsWith('.esm.js')) source = source.replace(
         'export {createMagazineViewer,createMagazineViewer as create,MagazineViewer,inferPageLayout,applyImposition,createImpositionEditor};',
         'window.FlippyFlapper = { MagazineViewer };'
     );
     const window = {};
-    vm.runInNewContext(source, { window }, { filename: file });
+    vm.runInNewContext(source, { window, console: { error() {} }, ...globals }, { filename: file });
     return window.FlippyFlapper.MagazineViewer.prototype;
 }
 
@@ -192,5 +192,67 @@ for (const file of ['flippy-flapper.js', 'flippy-flapper.esm.js']) {
         viewer.options.spreadMode = 'always';
         viewer.viewport.getBoundingClientRect = () => ({ width: 900, height: 600 });
         assert.throws(() => viewer.resize(), /Real resize started/);
+    });
+}
+
+for (const file of ['flippy-flapper.js', 'flippy-flapper.esm.js']) {
+    const prototype = prototypeFor(file);
+
+    test(`${file}: throwing event subscribers do not block later subscribers`, () => {
+        const viewer = Object.create(prototype);
+        let delivered = 0;
+        viewer.listeners = new Map([['pagechange', new Set([
+            () => { throw Error('consumer callback'); },
+            () => { delivered++; },
+        ])]]);
+        viewer.getState = () => ({ pageIndex: 1 });
+        assert.doesNotThrow(() => viewer.emit('pagechange'));
+        assert.equal(delivered, 1);
+    });
+
+    test(`${file}: a third touch contact invalidates the active pinch baseline`, () => {
+        const viewer = Object.create(prototype);
+        Object.assign(viewer, {
+            loaded: true, destroyed: false, foldoutBusy: false, turn: null,
+            openFoldouts: new Set(), options: {}, state: { mode: 'spread', zoom: 1 },
+            pageWidth: 200, manifest: { pageCount: 4 },
+            pointers: new Map([[1, { type: 'touch' }], [2, { type: 'touch' }]]),
+            pinch: { distance: 100, zoom: 1 }, gesture: { id: 1 },
+            book: { getBoundingClientRect: () => ({ left: 0, top: 0, width: 400, height: 600 }) },
+            viewport: { focus() {}, setPointerCapture() {} },
+            stopAutoFlip() {}, wake() {}, group: () => [1, 2],
+        });
+        prototype.pointerDown.call(viewer, {
+            pointerId: 3, pointerType: 'touch', button: 0, clientX: 20, clientY: 20,
+            target: { closest: () => false }, preventDefault() {},
+        });
+        assert.equal(viewer.pinch, null);
+        assert.equal(viewer.gesture, null);
+        prototype.pointerUp.call(viewer, { pointerId: 3 });
+        assert.equal(viewer.pointers.size, 2);
+        assert.equal(viewer.pinch, null);
+    });
+
+    test(`${file}: destroying a fullscreen viewer exits fullscreen once`, () => {
+        const root = {};
+        let exits = 0;
+        const prototype = prototypeFor(file, {
+            document: { fullscreenElement: root, exitFullscreen: () => { exits++; return Promise.resolve(); } },
+            clearTimeout() {}, cancelAnimationFrame() {},
+        });
+        const viewer = Object.create(prototype);
+        Object.assign(viewer, {
+            destroyed: false, root, original: {}, listeners: new Map(),
+            cancelFoldoutTransition() {}, cancelTurn() {}, clearAutoTimer() {},
+            abort: { abort() {} }, fetchAbort: { abort() {} },
+            observer: { disconnect() {} },
+        });
+        viewer.root.replaceChildren = () => {};
+        viewer.root.removeAttribute = () => {};
+        viewer.root.setAttribute = () => {};
+        viewer.destroy();
+        viewer.destroy();
+        assert.equal(exits, 1);
+        assert.equal(viewer.destroyed, true);
     });
 }

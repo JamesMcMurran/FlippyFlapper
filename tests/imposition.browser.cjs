@@ -100,3 +100,18 @@ test('reader-spreads preview agrees with the viewer for automatic wide images', 
     await page.locator('#apply-layouts').click();
     await expect(page.locator('#app-status')).toContainText('1 images · 1 pages');
 });
+
+test('destroying the imposition editor clears its preview and prevents remounting', async ({page}) => {
+    const state = await page.evaluate(() => {
+        const host = document.createElement('div');
+        document.body.append(host);
+        const editor = FlippyFlapper.createImpositionEditor(host, { sources: [] });
+        editor.destroy();
+        editor.updateSources([{ image: 'missing.webp', thumbnail: 'missing.webp' }]);
+        editor.setConfiguration({ type: 'booklet' });
+        const result = { children: host.childElementCount, valid: editor.valid };
+        host.remove();
+        return result;
+    });
+    expect(state).toEqual({ children: 0, valid: true });
+});
