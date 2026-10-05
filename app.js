@@ -5,7 +5,7 @@
   const status=document.getElementById('app-status'),openButton=document.getElementById('open-images');
   const demoSelect=document.getElementById('open-demo'),layoutButton=document.getElementById('edit-layouts');
   const dialog=document.getElementById('layouts-dialog'),reference=document.getElementById('paper-reference'),rows=document.getElementById('layout-rows');
-  let reader=null,objectUrls=[],importing=false,sources=[],paperReference=0,baseUrl=document.baseURI,title='Your magazine';
+  let reader=null,objectUrls=[],importing=false,sources=[],paperReference=0,baseUrl=document.baseURI,title='Your magazine',imposition={type:'auto'},impositionEditor=null;
 
   /** Report progress or a recoverable import error. */
   function report(message,error=false){status.textContent=message;status.dataset.error=String(error);}
@@ -14,17 +14,18 @@
   /** Infer a source's layout, allowing explicit choices to override its proportions. */
   function layoutFor(source,index,ref=paperReference){
     if(source.choice!=='auto')return source.choice;
-    const paper=sources[ref],ratio=source.width/source.height/(paper.width/paper.height);
-    if(ratio>=1.6)return 'spread';
-    return index===0||index===sources.length-1?'cover':'single';
+    return FlippyFlapper.inferPageLayout(source.width,source.height);
   }
   /** Install the current source images without revoking their URLs during a layout change. */
   async function mount(initialSourceIndex){
     if(reader)reader.destroy();
-    const paper=sources[paperReference];
+    const paper=sources[paperReference],layout=layoutFor(paper,paperReference),paperWidth=paper.width/(layout==='spread'||layout==='foldout'?2:1);
+    const mapped=imposition.type==='auto'?null:FlippyFlapper.applyImposition({pageWidth:paperWidth,pageHeight:paper.height,pages:sources.map((source,index)=>({...source,layout:layoutFor(source,index)}))},imposition);
+    const panel=mapped?.pages.find(p=>p.sourceIndex===paperReference+1)||mapped?.pages[0],r=panel?.region;
+    const pw=r?paper.width*r.width:paperWidth,ph=r?paper.height*r.height:paper.height,sideways=panel?.rotation%180===90;
     reader=FlippyFlapper.create(root,{
-      manifest:{title,pageWidth:paper.width,pageHeight:paper.height,pageCount:sources.length,pages:sources.map((s,i)=>({index:i+1,image:s.image,thumbnail:s.thumbnail,layout:layoutFor(s,i)}))},
-      baseUrl,showHeader:true,globalArrowKeys:true,initialPage:sources.length>2?2:1,initialSourceIndex,
+      manifest:{title,imposition,pageWidth:sideways?ph:pw,pageHeight:sideways?pw:ph,pageCount:sources.length,pages:sources.map((s,i)=>({index:i+1,image:s.image,thumbnail:s.thumbnail,layout:layoutFor(s,i),width:s.width,height:s.height}))},
+      baseUrl,showHeader:true,globalArrowKeys:true,initialPage:1,initialSourceIndex,
       spreadMode:document.getElementById('page-view').value
     });
     await reader.ready;layoutButton.disabled=false;
@@ -33,7 +34,7 @@
   /** Replace the source collection and clean up only the previous magazine. */
   async function install(nextSources,nextBase,nextTitle,urls=[]){
     if(reader){reader.destroy();reader=null;}release(objectUrls);objectUrls=urls;
-    sources=nextSources;paperReference=0;baseUrl=nextBase;title=nextTitle;await mount();
+    sources=nextSources;imposition={type:'auto'};paperReference=0;baseUrl=nextBase;title=nextTitle;await mount();
   }
   /** Open either the original magazine or the mixed-layout demonstration. */
   async function demo(){
@@ -75,6 +76,8 @@
   /** Present source-image layout choices separately from physical page numbers. */
   function editLayouts(){
     if(!sources.length||importing)return;reader.stopAutoFlip();reader.cancelTurn();reference.replaceChildren();rows.replaceChildren();
+    impositionEditor?.destroy();impositionEditor=FlippyFlapper.createImpositionEditor(document.getElementById('imposition-settings'),{sources:sources.map(source=>({...source,layout:source.choice||source.layout||'auto'})),configuration:imposition,baseUrl,onChange:(_,state)=>{document.getElementById('apply-layouts').disabled=!state.valid;}});
+    document.getElementById('apply-layouts').disabled=!impositionEditor.valid;
     sources.forEach((source,index)=>{
       const option=document.createElement('option');option.value=index;option.textContent=`${source.name} (${source.width} × ${source.height})`;reference.append(option);
       const row=document.createElement('div');row.className='layout-row';
@@ -88,10 +91,17 @@
       select.value=source.choice;row.append(preview,label,select);rows.append(row);
     });reference.value=paperReference;dialog.showModal();
   }
+  /** Refresh the preview from draft choices without applying them to the reader. */
+  rows.addEventListener('change',()=>{
+    const choices=[...rows.querySelectorAll('select')].map(select=>select.value);
+    impositionEditor.updateSources(sources.map((source,index)=>({...source,layout:choices[index]})));
+    document.getElementById('apply-layouts').disabled=!impositionEditor.valid;
+  });
   /** Apply choices and retain the same source image even if physical numbering changes. */
   async function applyLayouts(){
     const sourceIndex=reader.getState().sourceIndex||1;
     paperReference=Number(reference.value);for(const select of rows.querySelectorAll('select'))sources[Number(select.dataset.source)].choice=select.value;
+    if(!impositionEditor.valid)return;imposition=impositionEditor.getConfiguration();
     dialog.close();layoutButton.disabled=true;
     try{await mount(sourceIndex);}catch(error){report(error.message,true);}
   }

@@ -14,3 +14,8 @@
 
 /* Keep page gestures out of the browser selection and image-drag machinery. */
 .ff-viewport{-webkit-user-select:none;user-select:none}.ff-viewport img{-webkit-user-drag:none}
+
+.ff-fullscreen .ff-hint{display:flex;height:auto;min-height:28px;padding:6px 12px;letter-spacing:0;font-size:12px;color:#eff0ed;opacity:1}
+@container(min-width:431px) and (max-width:600px){.ff-toolbar{flex-wrap:wrap;justify-content:center}.ff-navigation{order:-1;flex-basis:100%;justify-content:center}.ff-toolbar .ff-divider{display:none}}
+
+.ff-imposition{display:grid;gap:.65rem}.ff-imposition label{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}.ff-imposition input{width:5rem}.ff-imposition select,.ff-imposition input{padding:.4rem;border:1px solid #94a3b8;border-radius:.35rem;font:inherit;background:transparent;color:inherit}.ff-imposition-preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:.6rem;max-height:420px;overflow:auto}.ff-imposition-preview figure{margin:0;overflow:hidden}.ff-imposition-art{height:110px;background-color:white;background-repeat:no-repeat}.ff-imposition-preview figcaption{font-size:.7rem;overflow-wrap:anywhere;margin:.3rem 0}.ff-imposition-help,.ff-imposition-message{font-size:.85rem}.ff-imposition-custom{display:grid;gap:.5rem;max-height:250px;overflow:auto}.ff-imposition-custom>div{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}

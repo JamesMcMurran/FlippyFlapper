@@ -1,0 +1,1 @@
+module.exports={testDir:'.',testMatch:'imposition.browser.cjs',timeout:30000,workers:1,use:{browserName:'chromium',viewport:{width:1280,height:1000}},outputDir:'/tmp/flippy-flapper-browser-results',reporter:'list'};

@@ -28,7 +28,8 @@
     <div class="layouts-heading"><h2 id="layouts-title">Page layouts</h2><button id="close-layouts" type="button" aria-label="Close page layouts">×</button></div>
     <p>Fit images on white paper, join a two-page spread, or add a panel that folds outward.</p>
     <label class="paper-reference">Paper size from <select id="paper-reference"></select></label>
-    <p class="layouts-note">Auto uses the first and last images as covers when they are not wide and treats images at least 1.6× the paper width-to-height ratio as spreads. Set a wide image to Fold-out to keep a normal page beside it. Spreads may add a blank page to stay together.</p>
+    <p class="layouts-note">Auto treats portrait and square images as singles, landscape images up to twice as wide as tall as spreads, and wider images as fold-outs. The first spread wraps the front/right and back/left covers. Imposition overrides individual layout choices. Spreads may add a blank page to stay together.</p>
+    <div id="imposition-settings"></div>
     <div id="layout-rows"></div>
     <div class="layouts-footer"><button id="cancel-layouts" type="button">Cancel</button><button id="apply-layouts" type="button">Apply layouts</button></div>
   </dialog>
