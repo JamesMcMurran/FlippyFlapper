@@ -161,7 +161,7 @@ An HTTP/HTTPS site can use `manifestUrl: './magazine/manifest.json'` instead of 
 
 ## Page layouts and numbering
 
-`pageWidth` and `pageHeight` define the proportions of normal paper. Each source entry needs an `image` and `thumbnail`; indexes start at 1 and are consecutive. `pageCount` counts source entries.
+`pageWidth` and `pageHeight` define the proportions of normal paper; their aspect ratio must be between 1:32 and 32:1. Each source entry needs an `image` and `thumbnail`; indexes start at 1 and are consecutive. `pageCount` counts source entries.
 
 | Source `layout` | Display |
 | --- | --- |
@@ -265,6 +265,12 @@ Run the dependency-free API regression tests with Node.js 20 or later:
 
 ```sh
 npm test
+```
+
+Run unit tests with line coverage enforced at 90% for both library builds:
+
+```sh
+npm run test:coverage
 ```
 
 For browser checks, serve this checkout with a local HTTP server and open
