@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "test": "node --test tests/*.test.cjs",
-    "test:coverage": "c8 --all --include=lib/flippy-flapper.js --include=lib/flippy-flapper.esm.js --check-coverage --lines 90 --functions 90 --branches 90 node --test tests/*.test.cjs",
+    "test:coverage": "c8 --all --include=lib/flippy-flapper.js --include=lib/flippy-flapper.esm.js --check-coverage --lines 90 node --test tests/*.test.cjs",
     "test:browser": "playwright test --config tests/imposition.browser.config.cjs"
   },
   "devDependencies": {

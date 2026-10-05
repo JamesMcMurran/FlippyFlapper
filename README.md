@@ -267,6 +267,12 @@ Run the dependency-free API regression tests with Node.js 20 or later:
 npm test
 ```
 
+Run unit tests with line coverage enforced at 90% for both library builds:
+
+```sh
+npm run test:coverage
+```
+
 For browser checks, serve this checkout with a local HTTP server and open
 `index.html` or `examples/embed.html`. Test desktop and narrow-screen layouts;
 physical touch devices and Safari/Firefox still require separate verification.
