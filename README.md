@@ -95,8 +95,10 @@ loads complete neighboring spreads. Defaults retain 12 fitted page surfaces and
 8 decoded originals, with a two-page preload distance. Hosts can lower these
 counts for unusually large images. Retention is independent of preloading, so a
 recent backward turn normally reuses existing decoded artwork. Panels from one
-sheet share its original image load. Cached thumbnail previews are bounded to
-120 originals. Retry replaces a failed image load; destroying a viewer cancels
+sheet share its original image load. Settled pages and fold-out panels paint from
+those decoded originals into canvases, so private or non-cacheable delivery does
+not trigger another network download when the animation finishes. Cached thumbnail
+previews are bounded to 120 originals. Retry replaces a failed image load; destroying a viewer cancels
 pending loads and clears its caches. Caches last for that viewer session, not
 across browser reloads.
 
